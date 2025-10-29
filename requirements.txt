@@ -1,0 +1,7 @@
+# Biotelia Pollination System - Python Dependencies
+
+numpy>=1.21.0
+pygame>=2.1.0
+
+# Optional: For TouchDesigner integration
+# (TouchDesigner includes its own Python environment)
