@@ -47,6 +47,18 @@ USE_PRODUCTION_RESOLUTION = False
 DEFAULT_WIDTH = PRODUCTION_WIDTH if USE_PRODUCTION_RESOLUTION else TEST_WIDTH
 DEFAULT_HEIGHT = PRODUCTION_HEIGHT if USE_PRODUCTION_RESOLUTION else TEST_HEIGHT
 
+# Mocap Integration Settings
+USE_MOCAP_INPUT = False  # Set to True to use OSC mocap instead of mouse/autonomous agents
+MAX_VISITORS = 9  # 3 robot pollinators + 6 humans
+OSC_PORT = 9000  # Default OSC port for mocap data
+OSC_CHANNEL_PATTERN = 'p{id}x'  # Pattern: p0x, p0y, p1x, p1y, etc.
+
+# Mocap coordinate mapping
+MOCAP_X_MIN = 0.0  # Minimum X value from mocap system
+MOCAP_X_MAX = 1.0  # Maximum X value from mocap system
+MOCAP_Y_MIN = 0.0  # Minimum Y value from mocap system
+MOCAP_Y_MAX = 1.0  # Maximum Y value from mocap system
+
 # Settings
 TARGET_FPS = 60
 INTENSITY = 0.7

@@ -61,3 +61,50 @@ After switching to production mode, check the console output:
 ```
 
 You should see "PRODUCTION mode" instead of "TEST mode".
+
+## Mocap Integration
+
+For the final installation with mocap tracking, you'll also need to enable mocap input.
+
+### Enable Mocap Input
+
+In `config.py`, change line 51:
+```python
+USE_MOCAP_INPUT = False
+```
+to:
+```python
+USE_MOCAP_INPUT = True
+```
+
+This switches from mouse input to OSC mocap input for all 9 visitors (3 robot pollinators + 6 humans).
+
+**See MOCAP_SETUP.md for complete mocap integration guide.**
+
+## Complete Production Checklist
+
+Before going live on the final machine:
+
+**Resolution & Input:**
+- [ ] Set `USE_PRODUCTION_RESOLUTION = True` (line 44 in config.py)
+- [ ] Set `USE_MOCAP_INPUT = True` (line 51 in config.py)
+
+**TouchDesigner Setup:**
+- [ ] Create OSC In CHOP named `mocap_osc_input`
+- [ ] Set OSC port to 9000 (or match your mocap system)
+- [ ] Connect `mocap_osc_input` to `pollination_system` DAT
+
+**Mocap System:**
+- [ ] Configure mocap to send OSC to TouchDesigner machine
+- [ ] Verify OSC channels: p0x, p0y, p1x, p1y ... p8x, p8y
+- [ ] Test all 9 visitors can be tracked
+- [ ] Verify coordinates are normalized (0.0 to 1.0)
+
+**Final Testing:**
+- [ ] Check console shows "PRODUCTION mode"
+- [ ] Verify output resolution is 1920x2160
+- [ ] Test all visitors create auras and trails
+- [ ] Confirm pollination dances appear
+- [ ] Check network stability
+
+Detailed mocap setup instructions are in **MOCAP_SETUP.md**.
