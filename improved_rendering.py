@@ -25,8 +25,8 @@ def onCook(scriptOp):
     settings = op('/project1/settings_control')
 
     if settings and hasattr(settings.par, 'Resmode'):
-        # Use TouchDesigner parameter
-        use_production = (settings.par.Resmode.eval() == 1)
+        # Use TouchDesigner parameter (string: "test" or "production")
+        use_production = (settings.par.Resmode.eval() == "production")
         width = config.PRODUCTION_WIDTH if use_production else config.TEST_WIDTH
         height = config.PRODUCTION_HEIGHT if use_production else config.TEST_HEIGHT
     else:

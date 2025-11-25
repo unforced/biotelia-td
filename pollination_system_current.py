@@ -49,8 +49,8 @@ def initialize(width=None, height=None):
     # Use config defaults if not specified
     if width is None:
         if settings and hasattr(settings.par, 'Resmode'):
-            # Use TD parameter
-            use_production = (settings.par.Resmode.eval() == 1)  # 1 = production
+            # Use TD parameter (string: "test" or "production")
+            use_production = (settings.par.Resmode.eval() == "production")
             width = config.PRODUCTION_WIDTH if use_production else config.TEST_WIDTH
         else:
             # Fallback to config
@@ -58,7 +58,7 @@ def initialize(width=None, height=None):
 
     if height is None:
         if settings and hasattr(settings.par, 'Resmode'):
-            use_production = (settings.par.Resmode.eval() == 1)
+            use_production = (settings.par.Resmode.eval() == "production")
             height = config.PRODUCTION_HEIGHT if use_production else config.TEST_HEIGHT
         else:
             height = config.DEFAULT_HEIGHT
@@ -70,10 +70,20 @@ def initialize(width=None, height=None):
         structures_config=config.STRUCTURES
     )
 
-    # Add autonomous agents
-    system.add_autonomous_agent('bee')
-    system.add_autonomous_agent('butterfly')
-    system.add_autonomous_agent('moth')
+    # Add autonomous agents only in test mode
+    # In production/mocap mode, only mocap-tracked visitors are shown
+    if settings and hasattr(settings.par, 'Inputmode'):
+        use_mocap = (settings.par.Inputmode.eval() == "mocap")
+    else:
+        use_mocap = config.USE_MOCAP_INPUT
+
+    num_agents = 0
+    if not use_mocap:
+        # Test mode: add autonomous agents
+        system.add_autonomous_agent('bee')
+        system.add_autonomous_agent('butterfly')
+        system.add_autonomous_agent('moth')
+        num_agents = 3
 
     initialized = True
 
@@ -83,7 +93,10 @@ def initialize(width=None, height=None):
     print(f"✓ Biotelia Pollination System initialized ({mode} mode)")
     print(f"  - Canvas: {width}x{height}")
     print(f"  - Structures: {len(config.STRUCTURES)}")
-    print(f"  - Agents: 3 (bee, butterfly, moth)")
+    if num_agents > 0:
+        print(f"  - Agents: {num_agents} (bee, butterfly, moth)")
+    else:
+        print(f"  - Agents: 0 (mocap mode - visitors only)")
 
     # Show settings source
     if settings and hasattr(settings.par, 'Resmode'):
@@ -122,8 +135,8 @@ def update_frame(chop_data, dt=1.0/60.0):
     use_mocap = False
 
     if settings and hasattr(settings.par, 'Inputmode'):
-        # Use TD parameter: 0 = mouse, 1 = mocap
-        use_mocap = (settings.par.Inputmode.eval() == 1)
+        # Use TD parameter (string: "mouse" or "mocap")
+        use_mocap = (settings.par.Inputmode.eval() == "mocap")
     else:
         # Fallback to config
         use_mocap = config.USE_MOCAP_INPUT
