@@ -52,7 +52,7 @@ class AutonomousAgent:
         
         # Type-specific characteristics
         self._set_characteristics()
-        
+
         # Pick initial target
         self._pick_new_target()
         
@@ -63,7 +63,7 @@ class AutonomousAgent:
             'butterfly': {'speed': 40, 'size': 40, 'wiggle': 1.5, 'color': np.array([255, 160, 200], dtype=np.uint8)},
             'moth': {'speed': 50, 'size': 35, 'wiggle': 1.0, 'color': np.array([180, 200, 220], dtype=np.uint8)},
         }
-        
+
         char = characteristics.get(self.type, characteristics['bee'])
         self.speed = char['speed']
         self.size = char['size']
@@ -105,14 +105,14 @@ class AutonomousAgent:
         distance = math.sqrt(dx * dx + dy * dy)
         
         if self.state == 'flying':
-            # Fly toward target with organic wiggle
+            # Simple straight-ish flight with gentle wiggle
             wiggle_x = math.sin(current_time * 0.003) * self.wiggle * 20
             wiggle_y = math.cos(current_time * 0.004) * self.wiggle * 20
-            
+
             if distance > 0:
                 self.x += (dx / distance) * self.speed * dt * speed_multiplier + wiggle_x * dt
                 self.y += (dy / distance) * self.speed * dt * speed_multiplier + wiggle_y * dt
-            
+
             # Arrived at structure?
             if distance < 30:
                 self.state = 'collecting'

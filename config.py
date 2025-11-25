@@ -31,9 +31,23 @@ STRUCTURES = [
     {'id': 2, 'x': 0.50, 'y': 0.80, 'radius': 100, 'color': STRUCTURE_COLORS['structure3']},  # Bottom-center
 ]
 
+# Resolution Settings
+# PRODUCTION resolution (requires commercial TouchDesigner license)
+PRODUCTION_WIDTH = 1920
+PRODUCTION_HEIGHT = 2160  # Portrait 8:9 aspect ratio
+
+# TEST resolution (within non-commercial 1280x1280 limit, same aspect ratio)
+TEST_WIDTH = 1138  # Maintains 8:9 aspect ratio
+TEST_HEIGHT = 1280
+
+# Current mode: Set to True when deploying to production machine
+USE_PRODUCTION_RESOLUTION = False
+
+# Active resolution (automatically selected)
+DEFAULT_WIDTH = PRODUCTION_WIDTH if USE_PRODUCTION_RESOLUTION else TEST_WIDTH
+DEFAULT_HEIGHT = PRODUCTION_HEIGHT if USE_PRODUCTION_RESOLUTION else TEST_HEIGHT
+
 # Settings
-DEFAULT_WIDTH = 1920
-DEFAULT_HEIGHT = 1080
 TARGET_FPS = 60
 INTENSITY = 0.7
 SPEED = 2.0  # Increased for better visibility
