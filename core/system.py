@@ -155,6 +155,20 @@ class PollinationSystem:
         # Update autonomous agents
         for agent in self.agents:
             agent.update(dt, current_timestamp, self.speed)
+
+            # Check if agent pollinated (touched different colored structure)
+            if agent.last_pollination is not None:
+                pollination = agent.last_pollination
+                # Create pollination dance
+                dance = PollinationDance(
+                    pollination['x'],
+                    pollination['y'],
+                    pollination['old_color'],
+                    pollination['new_color']
+                )
+                self.dances.append(dance)
+                # Clear the pollination flag
+                agent.last_pollination = None
             
         # Return complete render data
         return self.get_render_data(visitor_positions, current_timestamp)

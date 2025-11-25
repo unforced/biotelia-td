@@ -40,10 +40,15 @@ class AutonomousAgent:
         self.current_color = None
         self.glow_intensity = 0.0
         self.collected_time = 0.0
+
+        # Pollination tracking
+        self.last_pollination = None  # Stores {x, y, old_color, new_color} when pollination happens
         
-        # Trail
+        # Trail (same as human visitors)
         self.trail = []  # List of {x, y, color, life}
-        self.max_trail_points = 30
+        self.max_trail_points = 80  # Match human visitors
+        self.last_trail_position = None  # Track distance moved
+        self.trail_min_distance = 8  # Minimum pixels before adding point
         
         # Type-specific characteristics
         self._set_characteristics()
@@ -119,10 +124,24 @@ class AutonomousAgent:
             circle_radius = 25
             self.x = self.target_structure.x + math.cos(circle_angle) * circle_radius
             self.y = self.target_structure.y + math.sin(circle_angle) * circle_radius
-            
+
             # Finished collecting?
             if self.state_timer <= 0:
-                self.collect_color(self.target_structure.color)
+                # Check if this is a different color (pollination event!)
+                new_color = self.target_structure.color
+                if self.current_color is not None:
+                    # Check if different color
+                    is_different = not np.array_equal(self.current_color, new_color)
+                    if is_different:
+                        # Store pollination event for system to create dance
+                        self.last_pollination = {
+                            'x': self.target_structure.x,
+                            'y': self.target_structure.y,
+                            'old_color': self.current_color.copy(),
+                            'new_color': np.array(new_color, dtype=np.uint8)
+                        }
+
+                self.collect_color(new_color)
                 self._pick_new_target()
                 
         # Keep in bounds
@@ -137,21 +156,38 @@ class AutonomousAgent:
                 self.glow_intensity = 0.0
                 self.current_color = None
                 
-        # Update trail
+        # Update trail (same logic as human visitors)
         if self.current_color is not None and self.glow_intensity > 0:
-            if len(self.trail) == 0 or (len(self.trail) > 0 and random.random() < 0.3):
-                self.trail.append({
-                    'x': self.x,
-                    'y': self.y,
-                    'color': self.current_color.copy(),
-                    'life': 1.0,
-                })
-                if len(self.trail) > self.max_trail_points:
-                    self.trail.pop(0)
-                    
-        # Fade trail
+            # Add trail point based on distance moved (not randomly)
+            if self.last_trail_position is not None:
+                dx = self.x - self.last_trail_position[0]
+                dy = self.y - self.last_trail_position[1]
+                distance = math.sqrt(dx * dx + dy * dy)
+
+                if distance > self.trail_min_distance:
+                    self.trail.append({
+                        'x': self.x,
+                        'y': self.y,
+                        'color': self.current_color.copy(),
+                        'life': 1.0,
+                    })
+                    self.last_trail_position = (self.x, self.y)
+
+                    if len(self.trail) > self.max_trail_points:
+                        self.trail.pop(0)
+            else:
+                # First position
+                self.last_trail_position = (self.x, self.y)
+        else:
+            # Fade out existing trail when no color
+            for point in self.trail:
+                point['life'] -= dt * 0.5
+            self.trail = [p for p in self.trail if p['life'] > 0]
+            return
+
+        # Fade trail (same rate as human visitors: 0.15)
         for point in self.trail:
-            point['life'] -= dt * 0.6
+            point['life'] -= dt * 0.15
         self.trail = [p for p in self.trail if p['life'] > 0]
         
     def get_render_data(self, current_time):
