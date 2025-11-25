@@ -54,9 +54,9 @@ class AutonomousAgent:
     def _set_characteristics(self):
         """Set movement characteristics based on pollinator type."""
         characteristics = {
-            'bee': {'speed': 60, 'size': 6, 'wiggle': 0.8, 'color': np.array([255, 220, 60], dtype=np.uint8)},
-            'butterfly': {'speed': 40, 'size': 8, 'wiggle': 1.5, 'color': np.array([255, 160, 200], dtype=np.uint8)},
-            'moth': {'speed': 50, 'size': 7, 'wiggle': 1.0, 'color': np.array([180, 200, 220], dtype=np.uint8)},
+            'bee': {'speed': 60, 'size': 35, 'wiggle': 0.8, 'color': np.array([255, 220, 60], dtype=np.uint8)},
+            'butterfly': {'speed': 40, 'size': 40, 'wiggle': 1.5, 'color': np.array([255, 160, 200], dtype=np.uint8)},
+            'moth': {'speed': 50, 'size': 35, 'wiggle': 1.0, 'color': np.array([180, 200, 220], dtype=np.uint8)},
         }
         
         char = characteristics.get(self.type, characteristics['bee'])

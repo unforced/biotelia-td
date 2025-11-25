@@ -24,13 +24,11 @@ POLLINATOR_COLORS = {
 BACKGROUND_COLOR = np.array([10, 15, 8], dtype=np.uint8)
 PERSON_INDICATOR_COLOR = np.array([255, 230, 100], dtype=np.uint8)
 
-# Structure positions (normalized 0-1)
+# Structure positions (normalized 0-1) - 3 trees near exhibit edges
 STRUCTURES = [
-    {'id': 0, 'x': 0.20, 'y': 0.30, 'radius': 80, 'color': STRUCTURE_COLORS['structure1']},
-    {'id': 1, 'x': 0.75, 'y': 0.25, 'radius': 80, 'color': STRUCTURE_COLORS['structure2']},
-    {'id': 2, 'x': 0.50, 'y': 0.50, 'radius': 80, 'color': STRUCTURE_COLORS['structure3']},
-    {'id': 3, 'x': 0.25, 'y': 0.75, 'radius': 70, 'color': STRUCTURE_COLORS['structure4']},
-    {'id': 4, 'x': 0.80, 'y': 0.70, 'radius': 70, 'color': STRUCTURE_COLORS['structure5']},
+    {'id': 0, 'x': 0.15, 'y': 0.20, 'radius': 100, 'color': STRUCTURE_COLORS['structure1']},  # Top-left
+    {'id': 1, 'x': 0.85, 'y': 0.25, 'radius': 100, 'color': STRUCTURE_COLORS['structure2']},  # Top-right
+    {'id': 2, 'x': 0.50, 'y': 0.80, 'radius': 100, 'color': STRUCTURE_COLORS['structure3']},  # Bottom-center
 ]
 
 # Settings
@@ -38,11 +36,11 @@ DEFAULT_WIDTH = 1920
 DEFAULT_HEIGHT = 1080
 TARGET_FPS = 60
 INTENSITY = 0.7
-SPEED = 0.6
+SPEED = 2.0  # Increased for better visibility
 
 # Aura settings
-AURA_GLOW_RADIUS = 18
-AURA_DECAY_RATE = 0.998
+AURA_GLOW_RADIUS = 40  # Larger aura radius for better visibility
+AURA_DECAY_RATE = 0.995  # Slightly faster decay (was 0.998)
 AURA_MIN_INTENSITY = 0.05
 
 # Trail settings

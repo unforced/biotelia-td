@@ -55,7 +55,7 @@ class PollinationSystem:
         
         # Settings
         self.intensity = 0.7
-        self.speed = 0.6
+        self.speed = 5.0  # Increased for better visibility
         
     def add_autonomous_agent(self, agent_type):
         """Add a bee, butterfly, or moth."""
