@@ -6,7 +6,23 @@ def onCook(scriptOp):
 
     # Get canvas dimensions from TouchDesigner UI settings or config
     import sys
-    sys.path.insert(0, '/Users/unforced/Symbols/Codes/biotelia-td')
+    import os
+
+    # Add project path dynamically
+    def get_project_path():
+        """Get the biotelia-td project path dynamically."""
+        try:
+            toe_path = project.folder
+            if toe_path and os.path.exists(toe_path):
+                return toe_path
+        except:
+            pass
+        return '/Users/unforced/Symbols/Codes/biotelia-td'
+
+    biotelia_path = get_project_path()
+    if biotelia_path not in sys.path:
+        sys.path.insert(0, biotelia_path)
+
     import config
 
     # Try to get settings from TouchDesigner UI
