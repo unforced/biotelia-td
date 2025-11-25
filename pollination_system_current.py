@@ -8,31 +8,24 @@ import os
 
 # Add biotelia-td to path FIRST before any imports
 # Use dynamic path resolution based on .toe file location
-def get_project_path():
-    """Get the biotelia-td project path dynamically."""
-    # Try to get from TouchDesigner project location
-    try:
-        # Get the .toe file's parent directory
-        toe_path = project.folder
-        if toe_path and os.path.exists(toe_path):
-            return toe_path
-    except:
-        pass
+try:
+    # Get the .toe file's parent directory
+    biotelia_path = project.folder
+    if not biotelia_path or not os.path.exists(biotelia_path):
+        raise RuntimeError(
+            f"ERROR: Cannot determine project path. project.folder is: {biotelia_path}\n"
+            "Make sure the .toe file is saved to disk and all biotelia-td files are in the same folder."
+        )
+except Exception as e:
+    raise RuntimeError(
+        f"ERROR: Failed to get project path: {e}\n"
+        "The .toe file must be saved in the biotelia-td folder with core/, config.py, etc."
+    )
 
-    # Fallback: try to find based on this file's location
-    try:
-        # This DAT is in /project1/pollination_system
-        # The biotelia-td folder should be the .toe file's location
-        return os.path.dirname(os.path.abspath(__file__))
-    except:
-        pass
-
-    # Final fallback to hardcoded path (for development)
-    return '/Users/unforced/Symbols/Codes/biotelia-td'
-
-biotelia_path = get_project_path()
 if biotelia_path not in sys.path:
     sys.path.insert(0, biotelia_path)
+
+print(f"✓ Project path: {biotelia_path}")
 
 # NOW import the modules
 from core.system import PollinationSystem
