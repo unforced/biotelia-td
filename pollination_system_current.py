@@ -27,11 +27,25 @@ def initialize(width=None, height=None):
     if initialized:
         return
 
+    # Get settings from TouchDesigner UI if available
+    settings = op('/project1/settings_control')
+
     # Use config defaults if not specified
     if width is None:
-        width = config.DEFAULT_WIDTH
+        if settings and hasattr(settings.par, 'Resmode'):
+            # Use TD parameter
+            use_production = (settings.par.Resmode.eval() == 1)  # 1 = production
+            width = config.PRODUCTION_WIDTH if use_production else config.TEST_WIDTH
+        else:
+            # Fallback to config
+            width = config.DEFAULT_WIDTH
+
     if height is None:
-        height = config.DEFAULT_HEIGHT
+        if settings and hasattr(settings.par, 'Resmode'):
+            use_production = (settings.par.Resmode.eval() == 1)
+            height = config.PRODUCTION_HEIGHT if use_production else config.TEST_HEIGHT
+        else:
+            height = config.DEFAULT_HEIGHT
 
     # Create system with configured resolution
     system = PollinationSystem(
@@ -46,11 +60,20 @@ def initialize(width=None, height=None):
     system.add_autonomous_agent('moth')
 
     initialized = True
-    mode = "PRODUCTION" if config.USE_PRODUCTION_RESOLUTION else "TEST"
+
+    # Determine mode from actual resolution
+    mode = "PRODUCTION" if width == config.PRODUCTION_WIDTH else "TEST"
+
     print(f"✓ Biotelia Pollination System initialized ({mode} mode)")
     print(f"  - Canvas: {width}x{height}")
     print(f"  - Structures: {len(config.STRUCTURES)}")
     print(f"  - Agents: 3 (bee, butterfly, moth)")
+
+    # Show settings source
+    if settings and hasattr(settings.par, 'Resmode'):
+        print(f"  - Settings: TouchDesigner UI (/project1/settings_control)")
+    else:
+        print(f"  - Settings: config.py (fallback)")
 
 def update_frame(chop_data, dt=1.0/60.0):
     """
@@ -78,7 +101,18 @@ def update_frame(chop_data, dt=1.0/60.0):
         render_data = system.update(visitors, dt)
         return render_data
 
-    if config.USE_MOCAP_INPUT:
+    # Get input mode from TouchDesigner UI if available
+    settings = op('/project1/settings_control')
+    use_mocap = False
+
+    if settings and hasattr(settings.par, 'Inputmode'):
+        # Use TD parameter: 0 = mouse, 1 = mocap
+        use_mocap = (settings.par.Inputmode.eval() == 1)
+    else:
+        # Fallback to config
+        use_mocap = config.USE_MOCAP_INPUT
+
+    if use_mocap:
         # PRODUCTION MODE: Parse mocap data (p0x, p0y, p1x, p1y, ...)
         for person_id in range(config.MAX_VISITORS):
             try:

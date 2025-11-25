@@ -4,13 +4,23 @@ import numpy as np
 def onCook(scriptOp):
     """Render pollination system with enhanced trail visibility."""
 
-    # Get canvas dimensions from config
+    # Get canvas dimensions from TouchDesigner UI settings or config
     import sys
     sys.path.insert(0, '/Users/unforced/Symbols/Codes/biotelia-td')
     import config
 
-    width = config.DEFAULT_WIDTH
-    height = config.DEFAULT_HEIGHT
+    # Try to get settings from TouchDesigner UI
+    settings = op('/project1/settings_control')
+
+    if settings and hasattr(settings.par, 'Resmode'):
+        # Use TouchDesigner parameter
+        use_production = (settings.par.Resmode.eval() == 1)
+        width = config.PRODUCTION_WIDTH if use_production else config.TEST_WIDTH
+        height = config.PRODUCTION_HEIGHT if use_production else config.TEST_HEIGHT
+    else:
+        # Fallback to config defaults
+        width = config.DEFAULT_WIDTH
+        height = config.DEFAULT_HEIGHT
 
     pollination_dat = op('/project1/pollination_system')
     input_chop = op('/project1/scale_to_canvas')
