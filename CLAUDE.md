@@ -1,488 +1,245 @@
 # CLAUDE.md - AI Assistant Orientation Guide
 
 **For:** New Claude Code sessions or AI assistants joining this project
-**Last Updated:** 2025-11-25
-**Project Status:** ✅ Production Ready - Mocap Mode
+**Last Updated:** 2025-11-28
+**Project Status:** In Active Development - Coordinate Mapping Refinement
 
 ---
 
 ## TL;DR - Where We're At
 
-This is a **working, production-ready** TouchDesigner pollination visualization for a 7×8 ft floor projection. Visitors are tracked via mocap and become pollinators in an interactive ecosystem. The system is **complete and deployed**.
+This is a TouchDesigner pollination visualization for an **18×15 ft floor projection**. Visitors are tracked via mocap and become pollinators in an interactive ecosystem. Currently refining the coordinate mapping between physical space and screen space.
 
 **Current State:**
-- ✅ TouchDesigner file: `biotelia-pollination.toe`
-- ✅ Resolution: 1920×2160 (portrait)
-- ✅ Input: Mocap/OSC (9 visitors, port 55556)
-- ✅ Coordinate mapping: Pre-configured for room layout
-- ✅ Network: Clean, organized, production-focused
-- ✅ Documentation: Comprehensive
+- TouchDesigner file: `biotelia-pollination.toe`
+- Resolution: **2160×1920** (landscape - X is wider)
+- Input: Mocap/OSC (9 visitors, port 55556)
+- Coordinate mapping: **Being refined** - axes alignment in progress
+- Python DATs: **Linked to external files** (auto-sync)
 
-**If starting fresh:** Read `PRODUCTION_HANDOFF.md` first for complete production setup.
+**Active Work:**
+- Aligning physical room movement to screen movement
+- Testing with enlarged visitor indicators (10x size for visibility)
+- May need axis inversion adjustments
 
 ---
 
-## Project Purpose
+## Physical Setup (UPDATED)
 
-Interactive floor projection where visitors become pollinators in a living ecosystem:
+- **Room:** 34 ft (X) × 45 ft (Y)
+- **Projection:** 18 ft (X) × 15 ft (Y), centered
+  - 8 ft padding on each side in X
+  - 15 ft padding on each side in Y
+- **Canvas:** 2160 px (X) × 1920 px (Y)
+- **Mocap:** Sends values scaled by 0.0002 (raw values in thousands, likely mm)
 
-1. **Touch a structure** (glowing tree) → Your aura absorbs its color
-2. **Move through space** → Leave colored trails that fade
-3. **Touch different structure** → Spiral pollination dance effect
-4. **Visual metaphor** → Cross-pollination between different colored "trees"
+**Projection Corners in Mocap Space (after math4 scaling):**
+- Top-left: X=-0.35, Y=0.32
+- Top-right: X=0.52, Y=0.32
+- Bottom-left: X=-0.35, Y=-0.55
+- Bottom-right: X=0.52, Y=-0.55
 
-**Physical Setup:**
-- Room: 20 ft × 30 ft
-- Projection: 7 ft × 8 ft (centered)
-- Mocap tracks up to 9 people
-- Mocap sends OSC data (-1 to 1 range)
+**Structure Positions (physical room, observed):**
+- Yellow: Bottom-left on screen = High X, High Y in physical space
+- Pink: Bottom-right on screen
+- Purple: Top-center on screen
 
 ---
 
 ## Architecture Overview
 
-### The Stack
+### TouchDesigner Network
+
+**Key Nodes at `/project1`:**
+- `mocap` - COMP with OSC input + coordinate mapping chain
+- `input_switch` - Passes mocap data (index=0 for mocap mode)
+- `pollination_system` - Python DAT (linked to `pollination_system_current.py`)
+- `gpu_renderer` - Rendering COMP with scriptTOP
+- `settings_control` - UI parameters
+- `mcp_webserver_base` - MCP server for Claude Code control
+- `update_pulse` - Timing
+
+### Mocap Signal Chain (SIMPLIFIED 2025-11-28)
 
 ```
-Mocap System (OSC) → TouchDesigner → Projector
-                          ↓
-                    Python Logic
-                    (core/*.py)
-                          ↓
-                    GPU Rendering
-                    (1920×2160)
+oscin1 → math4 → o1to9 → math3 → map_x → map_y → momentum → out1
+           │        │       │        │       │
+           │        │       │        │       └── scope *y, transforms Y channels
+           │        │       │        └── scope *x, transforms X channels
+           │        │       └── negates X channels (scope o*_x)
+           │        └── renames qtm/6d/trk_[1-9] to p[1-9][xyz]
+           └── gain 0.0002 (scales raw mm to ~±0.5 range)
 ```
 
-### TouchDesigner Network (14 nodes)
+**Note:** Sequential chain - each Math CHOP with scope passes through non-matching channels unchanged. No split/merge needed.
 
-**Input & Settings:**
-- `settings_control` - UI for Resolution/Input mode
-- `mocap` - COMP with OSC input + coordinate mapping
-- `input_switch` - Mode switching
+### Python Files (LINKED to DATs)
 
-**Core:**
-- `pollination_system` - Python logic (visitor tracking, auras, trails)
-- `gpu_renderer` - Rendering COMP (output)
+Both Python files are now **synced to external files** - edits to the .py files automatically update in TD:
 
-**Timing:**
-- `frame_timer`, `frame_speed`, `animation_driver`, `update_pulse`
+| DAT | External File | Purpose |
+|-----|---------------|---------|
+| `/project1/pollination_system` | `pollination_system_current.py` | System logic |
+| `/project1/gpu_renderer/optimized_circles_callbacks` | `improved_rendering.py` | Rendering |
 
-**Utilities:**
-- `mcp_webserver_base` - MCP server for remote control
-- `python_path`, `setup_python_path` - Dynamic path resolution
-
-### Python Modules
-
-```
-core/
-├── system.py       # PollinationSystem (orchestrator)
-├── aura.py         # VisitorAura (color absorption from structures)
-├── trail.py        # MovementTrail (fading colored trails)
-├── dance.py        # PollinationDance (spiral particle effects)
-├── structure.py    # Structure (trees with colors)
-└── agent.py        # AutonomousAgent (disabled in production)
-```
-
-**Main entry points:**
-- `pollination_system_current.py` - DAT that runs the system
-- `improved_rendering.py` - Rendering with watery trail effects
-
----
-
-## Key Concepts
-
-### 1. Structures (Trees)
-
-Static colored circles at fixed positions. Defined in `config.py`:
-
+**To force reload after editing:**
 ```python
-STRUCTURES = [
-    {'name': 'structure1', 'x': 0.3, 'y': 0.25, 'color': [255, 230, 100]},  # Yellow
-    {'name': 'structure2', 'x': 0.7, 'y': 0.25, 'color': [255, 140, 180]},  # Pink
-    {'name': 'structure3', 'x': 0.5, 'y': 0.75, 'color': [180, 120, 255]},  # Purple
-]
-```
-
-**Positions:** Normalized 0-1 coordinates (scales to any resolution)
-
-### 2. Visitor Auras
-
-Each visitor has an aura that:
-- Starts neutral/colorless
-- Absorbs color when touching a structure
-- Slowly fades over time (`AURA_DECAY_RATE = 0.998`)
-- Renders as glowing circle around visitor
-
-### 3. Movement Trails
-
-Distance-based trail system:
-- Adds trail point when visitor moves > threshold distance
-- Max 80 points (`TRAIL_MAX_POINTS`)
-- Each point fades over time (`TRAIL_FADE_RATE = 0.15`)
-- Renders with "watery flow" animation (undulating sine waves)
-
-### 4. Pollination Dances
-
-Triggered when visitor carrying color A touches structure with color B:
-- Spiral particle effect
-- Color transitions from A → B
-- Visual "cross-pollination" metaphor
-
-### 5. Coordinate Mapping
-
-Critical system for mapping mocap coordinates to canvas:
-
-**Formula:** `canvas = (mocap × Scale) + Offset`
-
-**Current config (in `/project1/mocap`):**
-- X Scale: 2742.86, X Offset: 960
-- Y Scale: 4050, Y Offset: 1080
-- Input Range: -1 to 1
-
-**Why:** Maps 7×8 ft projection area (centered in 20×30 ft room) to 1920×2160 canvas.
-
----
-
-## Configuration Files
-
-### `config.py` - Visual Parameters
-
-All visual settings in one place:
-
-```python
-# Resolution
-PRODUCTION_WIDTH = 1920
-PRODUCTION_HEIGHT = 2160
-
-# Structures
-STRUCTURES = [...]  # 3 colored trees
-
-# Visual parameters
-AURA_DECAY_RATE = 0.998
-AURA_GLOW_RADIUS = 18
-TRAIL_MAX_POINTS = 80
-TRAIL_FADE_RATE = 0.15
-TRAIL_MIN_DISTANCE = 8
-```
-
-### TouchDesigner Settings (`/project1/settings_control`)
-
-**Resmode:**
-- `Test 1138x1280` - For testing
-- `Production 1920x2160` - **Active**
-
-**Inputmode:**
-- `Mouse/Test` - For development
-- `Mocap/OSC` - **Active**
-
-### Mocap Settings (`/project1/mocap`)
-
-**Coordinate Mapping page:**
-- X Scale, X Offset, Y Scale, Y Offset
-- Input Range (0-1 or -1 to 1)
-- **Tunable in production without code changes**
-
----
-
-## Data Flow
-
-### Frame Update Cycle
-
-1. **Mocap sends OSC** → `/project1/mocap/oscin1` (port 55556)
-   - Channels: p0x, p0y, p0z, p1x, p1y, p1z, ... p8x, p8y, p8z
-
-2. **Coordinate mapping** → `/project1/mocap/map_x`, `map_y`, `merge_xy`
-   - Transforms mocap coords to canvas pixels
-
-3. **Python logic** → `pollination_system` DAT
-   - Parses visitor positions
-   - Updates auras (color absorption, decay)
-   - Updates trails (add points, fade)
-   - Checks for pollination (collision with structures)
-   - Creates pollination dances
-
-4. **Rendering** → `improved_rendering.py` in scriptTOP
-   - Draws all layers to numpy array (1920×2160 RGBA)
-   - Background → Structures → Trails → Auras → Visitors → Dances
-
-5. **Output** → `/project1/gpu_renderer/OUT`
-
-### Rendering Layers (back to front)
-
-1. **Background** - Dark forest floor (10, 15, 8 RGB)
-2. **Structures** - Glowing colored circles with cores
-3. **Trails** - Watery flowing particle trails
-4. **Visitor Auras** - Colored glows around visitors
-5. **Visitor Indicators** - Yellow rings
-6. **Pollination Dances** - Spiral particle effects
-
-**Blending:**
-- Structures, visitors: Alpha blending
-- Trails, auras, dances: Additive blending (glows)
-
----
-
-## Mode Switching
-
-### Production vs Test Mode
-
-**Test Mode:**
-- Resolution: 1138×1280 (fits in non-commercial TD limit)
-- Input: Mouse
-- Autonomous agents: 3 (bee, butterfly, moth)
-
-**Production Mode (Current):**
-- Resolution: 1920×2160
-- Input: Mocap/OSC
-- Autonomous agents: None (mocap-only)
-
-**How to switch:**
-- Open `/project1/settings_control`
-- Change Resmode and Inputmode parameters
-- System reinitializes automatically
-
----
-
-## Recent Major Changes
-
-### Network Cleanup (2025-11-25)
-- Removed 11 unused nodes (25 → 14)
-- Deleted: test inputs, data export nodes, duplicates
-- Organized into logical horizontal rows
-
-### Coordinate Mapping System (2025-11-25)
-- Added tunable parameters to `/project1/mocap`
-- Pre-configured for 7×8 ft projection in 20×30 ft room
-- Supports both 0-1 and -1 to 1 mocap ranges
-
-### Settings UI (2025-11-25)
-- Created `/project1/settings_control` for production
-- Resmode and Inputmode parameters
-- No Python editing needed on prod machine
-
-### Path Resolution (2025-11-25)
-- Dynamic path using `project.folder`
-- No hardcoded paths - fail fast if not found
-- Works on any machine/username
-
-### Autonomous Agent Removal (2025-11-25)
-- Disabled bee/butterfly/moth in mocap mode
-- Production shows only mocap-tracked visitors
-
----
-
-## Common Tasks
-
-### Adding a New Structure
-
-1. Edit `config.py`:
-```python
-STRUCTURES = [
-    # ... existing structures
-    {'name': 'structure4', 'x': 0.5, 'y': 0.5, 'color': [100, 255, 180]},  # Cyan
-]
-```
-
-2. Reload TouchDesigner or force module reload
-
-**Note:** Use normalized 0-1 coordinates (0.5 = center)
-
-### Adjusting Visual Parameters
-
-Edit `config.py`:
-- Trail length: `TRAIL_MAX_POINTS`
-- Trail fade: `TRAIL_FADE_RATE`
-- Aura size: `AURA_GLOW_RADIUS`
-- Aura persistence: `AURA_DECAY_RATE`
-
-### Tuning Coordinate Mapping
-
-1. Open `/project1/mocap`
-2. Go to "Coordinate Mapping" page
-3. Adjust Scale/Offset parameters
-4. Test with known positions
-
-**Example:** Person at center (0, 0) should map to canvas center (960, 1080)
-
-### Debugging Mocap Input
-
-1. Check `/project1/mocap/oscin1` - Are channels appearing?
-2. Check channel values - Moving when person moves?
-3. Check coordinate mapper output - Reasonable pixel values?
-4. Check pollination_system - Are visitors being created?
-
----
-
-## File Organization
-
-### Root Files
-```
-biotelia-pollination.toe       # Main TD project ⭐
-config.py                       # Visual parameters
-pollination_system_current.py  # System logic entry
-improved_rendering.py           # Rendering entry
-```
-
-### Documentation
-```
-PRODUCTION_HANDOFF.md   # Production setup guide ⭐
-CLAUDE.md               # This file
-DEPLOYMENT.md           # Moving to new machines
-MOCAP_SETUP.md          # Mocap integration details
-README.md               # Project overview
-```
-
-### Code Modules
-```
-core/
-├── system.py      # Main orchestrator
-├── aura.py        # Visitor aura logic
-├── trail.py       # Trail system
-├── dance.py       # Pollination dances
-├── structure.py   # Trees/structures
-└── agent.py       # Autonomous agents (unused in prod)
-```
-
----
-
-## Performance
-
-**Current:**
-- 60 FPS at 1920×2160
-- Up to 9 simultaneous visitors
-- CPU rendering (numpy)
-- GPU composition (TouchDesigner TOPs)
-
-**Optimizations:**
-- Vectorized numpy operations (10-100x faster)
-- Efficient trail fade algorithm
-- Additive blending for glows
-- Limited trail points (80 max per visitor)
-
----
-
-## Deployment Notes
-
-### Dynamic Path Resolution
-
-System uses `project.folder` to find Python modules:
-- Works on any machine/username
-- No hardcoded paths
-- Fails fast with clear error if `.toe` not saved properly
-
-### Git Workflow
-
-```bash
-# Pull latest changes
-git pull
-
-# Changes are embedded in .toe file
-# Close and reopen TouchDesigner to see updates
-```
-
-### Module Reloading
-
-If Python code changes without restarting TD:
-
-```python
-# In textport:
 import sys
 for mod in list(sys.modules.keys()):
-    if 'core' in mod or 'pollination' in mod:
+    if 'pollination' in mod or 'core' in mod:
         del sys.modules[mod]
-
-op('/project1/pollination_system').module.initialized = False
-op('/project1/pollination_system').cook(force=True)
+op('/project1/pollination_system').par.loadonstartpulse.pulse()
+op('/project1/gpu_renderer/optimized_circles').cook(force=True)
 ```
 
 ---
 
-## Troubleshooting Quick Reference
+## Coordinate Mapping (CURRENT WORK)
 
-### No Visitors Visible
-- Check mocap OSC input arriving
-- Verify Inputmode = "Mocap/OSC"
-- Check coordinate mapping (people in projection area?)
+### The Challenge
 
-### Wrong Positions
-- Verify mocap range (-1 to 1 vs 0 to 1)
-- Adjust coordinate mapping parameters
-- Test with person at known position
+Physical movement in the room needs to map correctly to screen movement. Currently working on:
+1. **Axis alignment** - Which mocap axis maps to which screen axis
+2. **Inversions** - Direction of movement (up=up, left=left)
+3. **Scale/offset** - Mapping projection boundaries to canvas pixels
 
-### Import Errors
-- Ensure `.toe` saved to disk in biotelia-td folder
-- Check all files (core/, config.py) present
-- See DEPLOYMENT.md
+### Current Mapping Formula
 
-### Old Code After Update
-- Close TouchDesigner completely
-- Pull latest from git
-- Reopen TouchDesigner
+**In TouchDesigner (`map_x` and `map_y` nodes):**
+- `map_x`: preoff=0.35, gain=2482.76 (scope *x)
+- `map_y`: preoff=0.32, gain=-2206.9, postoff=1920 (scope *y)
 
----
+**In Python (`pollination_system_current.py`):**
+```python
+# Current mapping (may need adjustment):
+'x': 2160 - x_val,  # invert X
+'y': y_val,
+```
 
-## What NOT to Do
+### Testing
 
-❌ **Don't edit Python code on production machine** - Use TouchDesigner UI parameters
-❌ **Don't commit the .toe file carelessly** - Contains embedded code, gets large
-❌ **Don't use hardcoded paths** - Use dynamic resolution
-❌ **Don't enable autonomous agents in mocap mode** - Production is mocap-only
-❌ **Don't assume 0-1 mocap range** - Verify range first (-1 to 1 currently)
+Visitor indicators are currently **10x enlarged** for testing visibility:
+- Yellow rings: 140px radius (normally 14px)
+- Auras: 10x scale multiplier
 
----
+### Known Issues
 
-## Next Steps for New Session
-
-1. **Read PRODUCTION_HANDOFF.md** - Complete production setup guide
-2. **Check current git status** - See what's changed recently
-3. **Open TouchDesigner file** - Verify system running
-4. **Review recent commits** - `git log --oneline -10`
-5. **Ask about current priorities** - What needs work?
+- Physical movement may not align perfectly with screen movement
+- May need to swap X/Y axes or add inversions
+- Test by walking and observing which direction visitor moves
 
 ---
 
-## Key Decisions Made
+## Channel Naming
 
-### Architecture
-✅ Python logic + TouchDesigner rendering (hybrid approach)
-✅ Dynamic path resolution (works on any machine)
-✅ Mocap-only in production (no autonomous agents)
-✅ OSC input on port 55556
+**Important:** Mocap channels start at **1**, not 0:
+- `p1x`, `p1y`, `p1z` - Person 1
+- `p2x`, `p2y`, `p2z` - Person 2
+- ... up to `p9x`, `p9y`, `p9z`
 
-### Configuration
-✅ 1920×2160 resolution (portrait 8:9 aspect)
-✅ 3 structures (can add more in config.py)
-✅ Coordinate mapping for 7×8 ft centered projection
-✅ -1 to 1 mocap range
-
-### Visual Design
-✅ Watery flowing trails (sine wave animation)
-✅ Additive blending for glows
-✅ Dark forest floor background
-✅ Pollination dances on color change
+The Python code iterates `range(1, MAX_VISITORS + 1)` to match.
 
 ---
 
-## Contact & History
+## Recent Changes (2025-11-28)
 
-**Repository:** https://github.com/unforced/biotelia-td
+### Mocap Chain Simplification
+- Removed `select_y` and `replace_xy` nodes
+- Chain is now sequential: map_x → map_y (each transforms its scoped channels)
 
-**Development Timeline:**
-- Initial Python prototype
-- TouchDesigner integration
-- Performance optimization (10-100x improvement)
-- Mocap integration
-- Production configuration
-- Network cleanup
-- Coordinate mapping system
+### Python DAT Linking
+- `pollination_system` DAT linked to `pollination_system_current.py`
+- `optimized_circles_callbacks` DAT linked to `improved_rendering.py`
+- Changes to .py files auto-sync to TD
 
-**Current Status:** Production Ready
-**Last Major Update:** 2025-11-25
+### Coordinate Mapping Fixes
+- Fixed channel names (p1x not p0x)
+- Removed double-scaling bug (TD already maps to pixels)
+- Added X-axis inversion in Python
+- Testing axis alignment
+
+### Cleanup
+- Removed orphan nodes: `input_selector`, `frame_timer`, `animation_driver`, `frame_timer_callbacks1`, `frame_speed`, `trail1`
+
+---
+
+## Quick Reference
+
+### Check Mocap Data Flow
+```python
+# In TD textport or via MCP:
+op('/project1/input_switch').chan('p1x').eval()  # Should be ~0-2160 range
+op('/project1/input_switch').chan('p1y').eval()  # Should be ~0-1920 range
+```
+
+### Test Visitor Detection
+```python
+ps = op('/project1/pollination_system')
+chop = op('/project1/input_switch')
+result = ps.module.update_frame(chop, 1/60)
+len(result['visitors'])  # Should show number of detected visitors
+```
+
+### Force Render Update
+```python
+op('/project1/gpu_renderer/optimized_circles').cook(force=True)
+```
+
+---
+
+## Files to Know
+
+| File | Purpose |
+|------|---------|
+| `biotelia-pollination.toe` | Main TD project |
+| `pollination_system_current.py` | Visitor tracking, auras, trails |
+| `improved_rendering.py` | GPU rendering (scriptTOP callback) |
+| `config.py` | Visual parameters, structure positions |
+| `core/system.py` | PollinationSystem class |
+| `core/aura.py`, `trail.py`, `dance.py` | Component logic |
+
+---
+
+## Next Steps
+
+1. **Test coordinate mapping** - Walk around, verify movement direction
+2. **Adjust inversions** - If axes are wrong, modify Python mapping
+3. **Restore normal sizes** - Once aligned, remove 10x scaling
+4. **Fine-tune boundaries** - Ensure projection edges map correctly
+
+---
+
+## MCP Server
+
+Claude Code can control TD via MCP server at `/project1/mcp_webserver_base`:
+- Execute Python scripts
+- Read/update node parameters
+- Create/delete nodes
+- Get node info
+
+**Connection:** Pulse the webserver to restart if connection lost after TD restart.
+
+---
+
+## Git Workflow
+
+```bash
+# After making changes in TD, save the .toe file, then:
+git add biotelia-pollination.toe
+git commit -m "Description of changes"
+git push
+
+# Python file changes are tracked separately:
+git add pollination_system_current.py improved_rendering.py
+git commit -m "Description"
+git push
+```
+
+**Note:** Development machine and production machine use same repo. Pull on prod to get updates.
 
 ---
 
 **This file is the starting point for any new AI assistant session.**
 
 For production deployment details, see `PRODUCTION_HANDOFF.md`.
-For mocap setup, see `MOCAP_SETUP.md`.
-For deployment to new machines, see `DEPLOYMENT.md`.
+For mocap setup details, see `MOCAP_SETUP.md`.
