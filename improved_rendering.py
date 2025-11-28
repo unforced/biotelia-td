@@ -35,7 +35,7 @@ def onCook(scriptOp):
         height = config.DEFAULT_HEIGHT
 
     pollination_dat = op('/project1/pollination_system')
-    input_chop = op('/project1/scale_to_canvas')
+    input_chop = op('/project1/input_switch')
 
     if not pollination_dat:
         scriptOp.copyNumpyArray(np.zeros((height, width, 4), dtype=np.float32))
