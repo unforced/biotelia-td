@@ -142,8 +142,9 @@ def update_frame(chop_data, dt=1.0/60.0):
         use_mocap = config.USE_MOCAP_INPUT
 
     if use_mocap:
-        # PRODUCTION MODE: Parse mocap data (p0x, p0y, p1x, p1y, ...)
-        for person_id in range(config.MAX_VISITORS):
+        # PRODUCTION MODE: Parse mocap data (p1x, p1y, p2x, p2y, ...)
+        # Channel names start at 1, not 0
+        for person_id in range(1, config.MAX_VISITORS + 1):
             try:
                 # Get channels for this person
                 x_channel_name = f'p{person_id}x'
@@ -153,18 +154,13 @@ def update_frame(chop_data, dt=1.0/60.0):
                 y_chan = chop_data.chan(y_channel_name)
 
                 if x_chan and y_chan:
-                    # Get raw mocap values
-                    x_raw = x_chan.eval() if hasattr(x_chan, 'eval') else x_chan[0]
-                    y_raw = y_chan.eval() if hasattr(y_chan, 'eval') else y_chan[0]
+                    # Get mocap values (already mapped to pixel coordinates in TD)
+                    x = x_chan.eval() if hasattr(x_chan, 'eval') else x_chan[0]
+                    y = y_chan.eval() if hasattr(y_chan, 'eval') else y_chan[0]
 
-                    # Map mocap coordinates to canvas
-                    # Assuming mocap sends normalized 0-1 values
-                    x = x_raw * config.DEFAULT_WIDTH
-                    y = y_raw * config.DEFAULT_HEIGHT
-
-                    # Add visitor
+                    # Add visitor (use 0-based id internally)
                     visitors.append({
-                        'id': person_id,
+                        'id': person_id - 1,
                         'x': x,
                         'y': y,
                     })
