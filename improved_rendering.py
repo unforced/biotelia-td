@@ -127,13 +127,13 @@ def onCook(scriptOp):
             draw_circle_additive(canvas, x, y, size * 2, color, alpha * 0.5)
             draw_circle_additive(canvas, x, y, size, color, alpha * 0.7)
 
-    # 4. Visitor auras (color-changing!)
+    # 4. Visitor auras (color-changing!) - 10x size for testing
     for aura in render_data.get('visitor_auras', []):
         if aura is not None:
             x, y = int(aura['x']), int(aura['y'])
             color = aura['color']
             intensity = aura['intensity']
-            radius = int(aura['glow_radius'] * aura['pulse'])
+            radius = int(aura['glow_radius'] * aura['pulse'] * 10)  # 10x for testing
 
             # Large glow
             draw_circle_additive(canvas, x, y, radius * 3, color, intensity * 0.3)
@@ -164,8 +164,8 @@ def onCook(scriptOp):
     # 6. Visitor indicators
     for visitor in render_data.get('visitors', []):
         x, y = int(visitor['x']), int(visitor['y'])
-        # Yellow ring
-        draw_circle_ring(canvas, x, y, 14, 12, (255, 230, 100), 0.8)
+        # Yellow ring (10x size for testing)
+        draw_circle_ring(canvas, x, y, 140, 120, (255, 230, 100), 0.8)
 
     # 7. Pollination dances
     for dance in render_data.get('dances', []):
