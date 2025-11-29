@@ -1,4 +1,4 @@
-"""
+﻿"""
 Biotelia Pollination System - TouchDesigner Integration
 Main system controller
 """
@@ -159,12 +159,12 @@ def update_frame(chop_data, dt=1.0/60.0):
                     y_val = y_chan.eval() if hasattr(y_chan, 'eval') else y_chan[0]
 
                     # Map physical space to screen:
-                    # Axes are swapped: physical X -> screen Y, physical Y -> screen X
-                    # Inversions: +phys_x = -screen_y, +phys_y = -screen_x
+                    # Physical X -> Screen X (inverted: high phys X = low screen X)
+                    # Physical Y -> Screen Y (same direction)
                     visitors.append({
                         'id': person_id - 1,
-                        'x': 2160 - y_val,  # physical Y -> screen X (inverted)
-                        'y': 1920 - x_val,  # physical X -> screen Y (inverted)
+                        'x': 2160 - x_val,  # invert X
+                        'y': y_val,
                     })
             except Exception as e:
                 # Channel not found or error - skip this person
