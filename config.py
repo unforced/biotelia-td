@@ -24,11 +24,12 @@ POLLINATOR_COLORS = {
 BACKGROUND_COLOR = np.array([10, 15, 8], dtype=np.uint8)
 PERSON_INDICATOR_COLOR = np.array([255, 230, 100], dtype=np.uint8)
 
-# Structure positions (normalized 0-1) - 3 trees near exhibit edges
+# Structure positions (normalized 0-1) - 3 trees at corners, partially off-screen
+# Canvas is 2160x1920 (X x Y), positions at corners so auras extend into view
 STRUCTURES = [
-    {'id': 0, 'x': 0.15, 'y': 0.20, 'radius': 100, 'color': STRUCTURE_COLORS['structure1']},  # Top-left
-    {'id': 1, 'x': 0.85, 'y': 0.25, 'radius': 100, 'color': STRUCTURE_COLORS['structure2']},  # Top-right
-    {'id': 2, 'x': 0.50, 'y': 0.80, 'radius': 100, 'color': STRUCTURE_COLORS['structure3']},  # Bottom-center
+    {'id': 0, 'x': 0.0, 'y': 1.0, 'radius': 300, 'color': STRUCTURE_COLORS['structure1']},   # Yellow: bottom-left
+    {'id': 1, 'x': 1.0, 'y': 0.0, 'radius': 300, 'color': STRUCTURE_COLORS['structure2']},   # Pink: top-right
+    {'id': 2, 'x': 0.0, 'y': 0.0, 'radius': 300, 'color': STRUCTURE_COLORS['structure3']},   # Purple: top-left
 ]
 
 # Resolution Settings
@@ -65,7 +66,7 @@ INTENSITY = 0.7
 SPEED = 2.0  # Increased for better visibility
 
 # Aura settings
-AURA_GLOW_RADIUS = 40  # Larger aura radius for better visibility
+AURA_GLOW_RADIUS = 120  # 3x larger aura radius for corner trees
 AURA_DECAY_RATE = 0.995  # Slightly faster decay (was 0.998)
 AURA_MIN_INTENSITY = 0.05
 
