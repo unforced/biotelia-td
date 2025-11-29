@@ -158,12 +158,10 @@ def update_frame(chop_data, dt=1.0/60.0):
                     x_val = x_chan.eval() if hasattr(x_chan, 'eval') else x_chan[0]
                     y_val = y_chan.eval() if hasattr(y_chan, 'eval') else y_chan[0]
 
-                    # Map physical space to screen:
-                    # Physical X -> Screen X (inverted: high phys X = low screen X)
-                    # Physical Y -> Screen Y (same direction)
+                    # Coordinates are already mapped to pixels in TouchDesigner
                     visitors.append({
                         'id': person_id - 1,
-                        'x': 2160 - x_val,  # invert X
+                        'x': x_val,
                         'y': y_val,
                     })
             except Exception as e:

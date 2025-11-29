@@ -2,48 +2,41 @@
 
 **For:** New Claude Code sessions or AI assistants joining this project
 **Last Updated:** 2025-11-28
-**Project Status:** Ready for Live Testing - Coordinate Mapping Configured
+**Project Status:** Ready for Live Testing - Coordinate Mapping Simplified
 
 ---
 
 ## TL;DR - Where We're At
 
-This is a TouchDesigner pollination visualization for an **18×15 ft floor projection**. Visitors are tracked via mocap and become pollinators in an interactive ecosystem. Coordinate mapping is configured and ready for live testing.
+This is a TouchDesigner pollination visualization for an **18×15 ft floor projection**. Visitors are tracked via mocap and become pollinators in an interactive ecosystem.
 
 **Current State:**
 - TouchDesigner file: `biotelia-pollination.toe`
-- Resolution: **2160×1920** (landscape - X is wider)
+- Resolution: **1920×2160** (portrait - production) or **1138×1280** (test mode)
 - Input: Mocap/OSC (9 visitors, port 55556)
-- Coordinate mapping: **Configured** - needs live testing to verify
+- Coordinate mapping: **Done in TD** - raw mm → pixels via Range mapping
 - Python DATs: **Linked to external files** (auto-sync)
-- Mocap chain: **Simplified** - clean sequential signal flow
+- Mocap chain: **Clean and simple** - direct signal flow
 
 **Testing Status:**
 - Visitor indicators enlarged 10x for visibility during testing
 - Ready for live mocap testing to verify axis alignment
-- May need axis inversion adjustments based on testing
+- Adjust map_x/map_y Range parameters if positioning is off
 
 ---
 
-## Physical Setup (UPDATED)
+## Physical Setup
 
 - **Room:** 34 ft (X) × 45 ft (Y)
 - **Projection:** 18 ft (X) × 15 ft (Y), centered
   - 8 ft padding on each side in X
   - 15 ft padding on each side in Y
-- **Canvas:** 2160 px (X) × 1920 px (Y)
-- **Mocap:** Sends values scaled by 0.0002 (raw values in thousands, likely mm)
+- **Canvas:** 1920 px (X) × 2160 px (Y) in production mode
+- **Mocap:** Sends raw values in millimeters (mm)
 
-**Projection Corners in Mocap Space (after math4 scaling):**
-- Top-left: X=-0.35, Y=0.32
-- Top-right: X=0.52, Y=0.32
-- Bottom-left: X=-0.35, Y=-0.55
-- Bottom-right: X=0.52, Y=-0.55
-
-**Structure Positions (physical room, observed):**
-- Yellow: Bottom-left on screen = High X, High Y in physical space
-- Pink: Bottom-right on screen
-- Purple: Top-center on screen
+**Approximate Mocap Coordinate Ranges (mm):**
+- X: -1750 to 2600 (projection area)
+- Y: -2750 to 1600 (projection area)
 
 ---
 
@@ -56,28 +49,45 @@ This is a TouchDesigner pollination visualization for an **18×15 ft floor proje
 - `input_switch` - Passes mocap data (index=0 for mocap mode)
 - `pollination_system` - Python DAT (linked to `pollination_system_current.py`)
 - `gpu_renderer` - Rendering COMP with scriptTOP
-- `settings_control` - UI parameters
+- `settings_control` - UI parameters (Resmode, Inputmode)
 - `mcp_webserver_base` - MCP server for Claude Code control
-- `update_pulse` - Timing
 
-### Mocap Signal Chain (VERIFIED 2025-11-28)
+### Mocap Signal Chain
 
 ```
-oscin1 → math4 → o1to9 → math3 → map_x → map_y → momentum → out1
-           │        │       │        │       │         │
-           │        │       │        │       │         └── smoothing/lag
-           │        │       │        │       └── scope *y: (val+0.32)×-2206.9+1920
-           │        │       │        └── scope *x: (val+0.35)×2482.76
-           │        │       └── negates X channels (scope o*_x)
-           │        └── renames qtm/6d/trk_[1-9] to p[1-9][xyz]
-           └── gain 0.0002 (scales raw mm to ~±0.5 range)
+oscin1 → o1to9 → map_x → map_y → momentum → out1
+           │        │       │         │
+           │        │       │         └── lag smoothing (0.1s)
+           │        │       └── Range: mm → pixels (Y axis)
+           │        └── Range: mm → pixels (X axis)
+           └── renames qtm/6d/trk_[1-9][1-3] to p[1-9][xyz]
 ```
 
-**Key:** Sequential chain - each Math CHOP with scope passes through non-matching channels unchanged. No split/merge pattern needed.
+**Key:** All coordinate mapping happens in TouchDesigner. Python receives pixel coordinates directly.
+
+### Coordinate Mapping (map_x / map_y)
+
+Both use **Range** mode (`postop = range`) to convert raw mm to pixels:
+
+**`/project1/mocap/map_x`:**
+- fromrange1: -1750 (left edge in mm)
+- fromrange2: 2600 (right edge in mm)
+- torange1: 0 (left edge in pixels)
+- torange2: 2160 (right edge in pixels)
+- scope: `*x`
+
+**`/project1/mocap/map_y`:**
+- fromrange1: -2750 (one edge in mm)
+- fromrange2: 1600 (other edge in mm)
+- torange1: 1920 (inverted mapping)
+- torange2: 0
+- scope: `*y`
+
+**To adjust mapping:** Change fromrange1/fromrange2 values based on actual mocap coordinate observations.
 
 ### Python Files (LINKED to DATs)
 
-Both Python files are now **synced to external files** - edits to the .py files automatically update in TD:
+Both Python files are **synced to external files** - edits auto-update in TD:
 
 | DAT | External File | Purpose |
 |-----|---------------|---------|
@@ -96,60 +106,19 @@ op('/project1/gpu_renderer/optimized_circles').cook(force=True)
 
 ---
 
-## Coordinate Mapping (CONFIGURED)
+## Resolution System
 
-### Full Pipeline
+Resolution is **dynamic** based on `settings_control.Resmode`:
 
-```
-Mocap (raw mm) → math4 (×0.0002) → ... → map_x/map_y (to pixels) → Python (final adjustments)
-```
+| Mode | Width | Height | Notes |
+|------|-------|--------|-------|
+| production | 1920 | 2160 | Requires commercial TD license |
+| test | 1138 | 1280 | Within non-commercial 1280×1280 limit |
 
-| Stage | X Channels | Y Channels |
-|-------|------------|------------|
-| Raw mocap | ~thousands (mm) | ~thousands (mm) |
-| After math4 | ~±0.5 | ~±0.5 |
-| After map_x | `(val+0.35)×2482.76` → 0-2160 px | pass through |
-| After map_y | pass through | `(val+0.32)×-2206.9+1920` → 0-1920 px |
-| Python | `2160 - x_val` (invert) | `y_val` (direct) |
-
-### TouchDesigner Parameters
-
-**`/project1/mocap/map_x`:**
-- preoff: 0.35
-- gain: 2482.76
-- scope: `*x`
-
-**`/project1/mocap/map_y`:**
-- preoff: 0.32
-- gain: -2206.9
-- postoff: 1920
-- scope: `*y`
-
-### Python Mapping (pollination_system_current.py:164-168)
-
-```python
-visitors.append({
-    'id': person_id - 1,
-    'x': 2160 - x_val,  # invert X: high phys X → low screen X
-    'y': y_val,         # direct: high phys Y → high screen Y
-})
-```
-
-### Expected Behavior (after testing)
-
-- Walking toward **high X** (physical) → move **left** on screen
-- Walking toward **high Y** (physical) → move **down** on screen
-- Yellow structure: **bottom-left** of projection = **high X, high Y** in physical space
-
-### Testing Visibility
-
-Currently **10x enlarged** for testing:
-- Visitor rings: 140px radius (normal: 14px)
-- Auras: 10x scale multiplier
-
-**To restore normal sizes after testing:**
-1. Edit `improved_rendering.py` line 136: remove `* 10`
-2. Edit `improved_rendering.py` line 168: change `140, 120` to `14, 12`
+The following nodes use expressions to match:
+- `optimized_circles` (scriptTOP) - sets the resolution
+- `background` (constantTOP) - references scriptTOP
+- `composite` (compositeTOP) - references scriptTOP
 
 ---
 
@@ -166,28 +135,33 @@ The Python code iterates `range(1, MAX_VISITORS + 1)` to match.
 
 ## Recent Changes (2025-11-28)
 
-### Mocap Chain Simplification
-- Removed `select_y` and `replace_xy` nodes (were creating janky split/merge pattern)
-- Chain is now clean sequential: `math3 → map_x → map_y → momentum → out1`
-- Each Math CHOP scopes only its channels, passes others through unchanged
+### Coordinate Mapping Overhaul
+- **Removed** arbitrary 0.0001 scaling (math4 deleted)
+- **Removed** broken math3 node (wrong scope pattern)
+- **Using** Range mapping in map_x/map_y: raw mm → pixels directly
+- **Removed** Python-side coordinate manipulation (was `2160 - x_val`)
+- All mapping now happens in TouchDesigner for better performance
 
-### Python DAT Linking
-- `pollination_system` DAT linked to `pollination_system_current.py`
-- `optimized_circles_callbacks` DAT linked to `improved_rendering.py`
-- Changes to .py files auto-sync to TD
+### Resolution Made Dynamic
+- scriptTOP, composite, background now use expressions
+- Automatically adapts to production/test mode via settings_control
 
-### Coordinate Mapping Fixes
-- Fixed channel names: `p1x` not `p0x` (mocap channels start at 1)
-- Removed double-scaling bug (Python was multiplying by canvas size, but TD already outputs pixels)
-- Added X-axis inversion in Python (`2160 - x_val`)
-- Configured map_x/map_y with measured projection boundaries
+### Momentum Simplified
+- Removed complex slope/filter/math chain
+- Now just: `in1 → lag1 (0.1s) → out1`
+- Simple smoothing for responsive but stable tracking
 
-### Testing Enhancements
-- Enlarged visitor indicators 10x (140px radius) for visibility during testing
-- Enlarged auras 10x
+### Orphan Nodes Removed
+- Deleted: `math3`, `math4`, `optimized_circles_callbacks1`, `update_pulse`
+- Cleaned up momentum COMP internals
 
-### Cleanup
-- Removed orphan nodes: `input_selector`, `frame_timer`, `animation_driver`, `frame_timer_callbacks1`, `frame_speed`, `trail1`, `select_y`, `replace_xy`
+### Files Archived
+Moved to `archive/` directory:
+- `frame_timer_callbacks.py`
+- `standalone.py`
+- `run_animation_td.py`
+- `render/` directory
+- `input/` directory
 
 ---
 
@@ -195,9 +169,12 @@ The Python code iterates `range(1, MAX_VISITORS + 1)` to match.
 
 ### Check Mocap Data Flow
 ```python
-# In TD textport or via MCP:
-op('/project1/input_switch').chan('p1x').eval()  # Should be ~0-2160 range
-op('/project1/input_switch').chan('p1y').eval()  # Should be ~0-1920 range
+# Raw mm values (after channel rename):
+op('/project1/mocap/o1to9').chan('p1x').eval()  # Should be ~-1000 to +1000
+
+# After pixel mapping:
+op('/project1/input_switch').chan('p1x').eval()  # Should be ~0-2160
+op('/project1/input_switch').chan('p1y').eval()  # Should be ~0-1920
 ```
 
 ### Test Visitor Detection
@@ -234,13 +211,11 @@ op('/project1/gpu_renderer/optimized_circles').cook(force=True)
 
 1. **Test coordinate mapping with mocap**
    - Walk in projection area, observe visitor indicator movement
-   - Verify: physical up → screen up, physical left → screen left
-   - Note any axis swaps or inversions needed
+   - Verify: physical movement maps correctly to screen movement
 
-2. **If axes are wrong**, adjust in `pollination_system_current.py` lines 164-168:
-   - Swap X/Y: `'x': y_val, 'y': x_val`
-   - Invert X: `'x': 2160 - x_val`
-   - Invert Y: `'y': 1920 - y_val`
+2. **If positioning is wrong**, adjust map_x/map_y Range parameters:
+   - `fromrange1`/`fromrange2`: Adjust to match actual mocap mm values
+   - Swap torange1/torange2 to invert an axis
 
 3. **Once aligned**, restore normal sizes in `improved_rendering.py`:
    - Line 136: remove `* 10` from aura radius
@@ -248,9 +223,43 @@ op('/project1/gpu_renderer/optimized_circles').cook(force=True)
 
 ### After Testing Passes
 
-4. Fine-tune projection boundaries if needed (adjust map_x/map_y preoff and gain)
+4. Fine-tune projection boundaries (adjust fromrange values)
 5. Test with multiple visitors
 6. Verify pollination mechanics (color absorption, trails, dances)
+
+---
+
+## Troubleshooting Coordinate Mapping
+
+### Movement is inverted (e.g., walk left → goes right)
+
+Swap the `torange1` and `torange2` values in map_x or map_y:
+```python
+# Via MCP:
+op('/project1/mocap/map_x').par.torange1 = 2160  # was 0
+op('/project1/mocap/map_x').par.torange2 = 0     # was 2160
+```
+
+### Axes are swapped (e.g., walk left → goes up)
+
+The map_x scope is `*x` and map_y scope is `*y`. If axes seem swapped, check if the mocap system has X/Y conventions different from expected.
+
+### Position is offset (visitor appears in wrong location)
+
+Adjust the `fromrange1`/`fromrange2` values to match actual mocap coordinates:
+```python
+# Check actual raw values first:
+print(op('/project1/mocap/o1to9').chan('p1x').eval())
+print(op('/project1/mocap/o1to9').chan('p1y').eval())
+
+# Then adjust range to encompass observed values
+```
+
+### Visitor not appearing at all
+
+1. Check mocap OSC is arriving: `op('/project1/mocap/oscin1').numChans`
+2. Check channels are renamed: `op('/project1/mocap/o1to9').chans()`
+3. Check pixel output is in valid range: 0-2160 for X, 0-1920 for Y
 
 ---
 
@@ -281,56 +290,6 @@ git push
 ```
 
 **Note:** Development machine and production machine use same repo. Pull on prod to get updates.
-
----
-
-## Troubleshooting Coordinate Mapping
-
-### Movement is inverted (e.g., walk left → goes right)
-
-Edit `pollination_system_current.py` lines 164-168:
-```python
-# To invert X axis:
-'x': 2160 - x_val,  # instead of just x_val
-
-# To invert Y axis:
-'y': 1920 - y_val,  # instead of just y_val
-```
-
-### Axes are swapped (e.g., walk left → goes up)
-
-Edit `pollination_system_current.py` lines 164-168:
-```python
-# Swap X and Y:
-'x': y_val,
-'y': x_val,
-
-# Or with inversions:
-'x': 1920 - y_val,
-'y': 2160 - x_val,
-```
-
-### Position is offset (visitor appears in wrong location)
-
-Adjust TouchDesigner `map_x`/`map_y` parameters:
-- **preoff**: Shifts the input range (add to move projection area)
-- **gain**: Scales the range (increase to stretch, decrease to compress)
-- **postoff**: Shifts the output (add to move output position)
-
-### Debug: Check raw vs mapped values
-
-```python
-# In TD textport or via MCP:
-raw = op('/project1/mocap/math3').chan('p1x').eval()
-mapped = op('/project1/input_switch').chan('p1x').eval()
-print(f"Raw: {raw}, Mapped: {mapped}")
-```
-
-### Visitor not appearing at all
-
-1. Check mocap OSC is arriving: look at `/project1/mocap/oscin1` channels
-2. Check `input_switch` is outputting values in 0-2160/0-1920 range
-3. Check Python is parsing channels correctly (p1x, not p0x)
 
 ---
 
