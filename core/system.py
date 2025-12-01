@@ -125,12 +125,13 @@ class PollinationSystem:
                     is_different = current_color is not None and not self._colors_match(current_color, structure.color)
                     
                     if is_different and aura.has_color():
-                        # Create pollination dance
+                        # Create pollination dance at edge of structure
                         dance = PollinationDance(
                             structure.x,
                             structure.y,
                             current_color,
-                            structure.color
+                            structure.color,
+                            structure_radius=structure.radius
                         )
                         self.dances.append(dance)
                         
@@ -159,12 +160,13 @@ class PollinationSystem:
             # Check if agent pollinated (touched different colored structure)
             if agent.last_pollination is not None:
                 pollination = agent.last_pollination
-                # Create pollination dance
+                # Create pollination dance at edge of structure
                 dance = PollinationDance(
                     pollination['x'],
                     pollination['y'],
                     pollination['old_color'],
-                    pollination['new_color']
+                    pollination['new_color'],
+                    structure_radius=pollination.get('radius', 650)
                 )
                 self.dances.append(dance)
                 # Clear the pollination flag

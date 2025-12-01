@@ -138,7 +138,8 @@ class AutonomousAgent:
                             'x': self.target_structure.x,
                             'y': self.target_structure.y,
                             'old_color': self.current_color.copy(),
-                            'new_color': np.array(new_color, dtype=np.uint8)
+                            'new_color': np.array(new_color, dtype=np.uint8),
+                            'radius': self.target_structure.radius
                         }
 
                 self.collect_color(new_color)

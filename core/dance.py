@@ -12,67 +12,76 @@ class PollinationDance:
     touches a structure with a different color.
     """
     
-    def __init__(self, x, y, visitor_color, structure_color, duration=2.5):
+    def __init__(self, x, y, visitor_color, structure_color, duration=2.5, structure_radius=650):
         """
         Initialize pollination dance effect.
-        
+
         Args:
             x, y: Position of the structure (center of swirl)
             visitor_color: RGB color visitor is carrying
             structure_color: RGB color of the structure
             duration: How long the swirl lasts (seconds)
+            structure_radius: Radius of the structure (for edge positioning)
         """
         self.x = x
         self.y = y
         self.visitor_color = np.array(visitor_color, dtype=np.uint8)
         self.structure_color = np.array(structure_color, dtype=np.uint8)
         self.duration = duration
+        self.structure_radius = structure_radius
         self.life = 1.0  # 1.0 to 0.0
-        
+
         # Create swirl particles
         self.particles = self._create_swirl_particles()
-        
+
         # Create expanding rings
         self.rings = self._create_rings()
         
     def _create_swirl_particles(self):
-        """Create particles that swirl outward."""
+        """Create particles that swirl at the edge of the structure."""
         particles = []
-        particle_count = 40
-        
+        particle_count = 60  # More particles for bigger effect
+
+        # Start particles at the edge of the structure circle
+        edge_radius = self.structure_radius * 0.85  # Slightly inside edge
+
         for i in range(particle_count):
             angle = (i / particle_count) * 2 * math.pi
             spiral = i / particle_count  # 0 to 1
-            
+
             # Alternate between visitor and structure colors
             color = self.visitor_color if i % 2 == 0 else self.structure_color
-            
+
+            # Particles start at edge and spiral outward with variation
+            radius_variation = random.uniform(-50, 100)
+
             particles.append({
                 'angle': angle,
                 'spiral': spiral,
-                'radius': 20 + spiral * 60,
-                'angular_speed': random.uniform(0.8, 1.5),
+                'radius': edge_radius + radius_variation + spiral * 80,
+                'angular_speed': random.uniform(1.0, 2.0),
                 'color': color,
                 'life': 1.0,
-                'size': random.uniform(4, 9),
+                'size': random.uniform(12, 24),  # Larger particles
             })
-            
+
         return particles
     
     def _create_rings(self):
-        """Create expanding rings (one for each color)."""
+        """Create expanding rings at the edge of the structure."""
+        edge_radius = self.structure_radius * 0.85
         return [
             {
-                'radius': 0,
-                'max_radius': 90,
+                'radius': edge_radius,
+                'max_radius': edge_radius + 200,
                 'color': self.visitor_color,
-                'speed': random.uniform(40, 60),
+                'speed': random.uniform(60, 100),
             },
             {
-                'radius': 0,
-                'max_radius': 90,
+                'radius': edge_radius - 20,
+                'max_radius': edge_radius + 180,
                 'color': self.structure_color,
-                'speed': random.uniform(40, 60),
+                'speed': random.uniform(60, 100),
             },
         ]
     

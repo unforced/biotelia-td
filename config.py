@@ -27,9 +27,9 @@ PERSON_INDICATOR_COLOR = np.array([255, 230, 100], dtype=np.uint8)
 # Canvas is 2160x1920 (X x Y), positions at corners so auras extend into view
 # Radius increased to 650 (was 300) for larger interaction area (single circle design)
 STRUCTURES = [
-    {'id': 0, 'x': 0.0, 'y': 1.0, 'radius': 650, 'color': STRUCTURE_COLORS['yellow']},   # Yellow: bottom-left
-    {'id': 1, 'x': 1.0, 'y': 1.0, 'radius': 650, 'color': STRUCTURE_COLORS['green']},    # Green: bottom-right
-    {'id': 2, 'x': 1.0, 'y': 0.0, 'radius': 650, 'color': STRUCTURE_COLORS['purple']},   # Purple: top-right
+    {'id': 0, 'x': 0.0, 'y': 0.0, 'radius': 650, 'color': STRUCTURE_COLORS['yellow']},   # Yellow: top-left
+    {'id': 1, 'x': 1.0, 'y': 1.0, 'radius': 650, 'color': STRUCTURE_COLORS['purple']},   # Purple: bottom-right
+    {'id': 2, 'x': 1.0, 'y': 0.0, 'radius': 650, 'color': STRUCTURE_COLORS['green']},    # Green: top-right
 ]
 
 # Resolution Settings

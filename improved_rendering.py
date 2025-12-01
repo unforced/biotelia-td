@@ -210,7 +210,7 @@ def onCook(scriptOp):
         # Inner core
         draw_circle_additive(canvas, x, y, radius, white_color, 0.35)
 
-    # 7. Pollination dances
+    # 7. Pollination dances (spiral effect at edge of trees)
     for dance in render_data.get('dances', []):
         for particle in dance.get('particles', []):
             x, y = int(particle['x']), int(particle['y'])
@@ -218,8 +218,10 @@ def onCook(scriptOp):
             alpha = particle['alpha']
             size = int(particle['size'])
 
-            draw_circle_additive(canvas, x, y, size * 2, color, alpha * 0.6)
-            draw_circle_additive(canvas, x, y, size, color, alpha)
+            # Larger glow layers for more visible spiral
+            draw_circle_additive(canvas, x, y, size * 3, color, alpha * 0.3)
+            draw_circle_additive(canvas, x, y, size * 2, color, alpha * 0.5)
+            draw_circle_additive(canvas, x, y, size, color, alpha * 0.8)
 
     scriptOp.copyNumpyArray(canvas)
 
