@@ -58,25 +58,61 @@ def onCook(scriptOp):
 
     # Get time for trail flow animation
     import time
+    import random
+    import math
     flow_time = time.time()
+
+    # Seed random for consistent particle positions per frame
+    # (particles stay in same relative positions but float)
 
     # === RENDER LAYERS ===
 
-    # 1. Structures (trees)
-    for structure in render_data.get('structures', []):
+    # 1. Structures (trees) - floating particles within circle radius
+    for struct_idx, structure in enumerate(render_data.get('structures', [])):
         x, y = int(structure['x']), int(structure['y'])
-        radius = int(structure['radius'] * structure['pulse'])
+        radius = int(structure['radius'])
         color = structure['color']
 
-        # Outer glow
-        draw_circle_additive(canvas, x, y, radius * 1.8, color, 0.15)
-        # Structure body
-        draw_circle(canvas, x, y, radius, color, 0.9)
-        # Core
-        draw_circle(canvas, x, y, 12, color, 1.0)
+        # Generate floating particles within the circle
+        num_particles = 120  # Number of particles per tree
+
+        for i in range(num_particles):
+            # Use deterministic seed for each particle (consistent positions)
+            seed = struct_idx * 1000 + i
+
+            # Base position within circle (polar coordinates)
+            # Use golden ratio for even distribution
+            golden_angle = math.pi * (3 - math.sqrt(5))
+            theta_base = i * golden_angle
+            # Distribute radius with sqrt for even area coverage
+            r_base = math.sqrt((i + 0.5) / num_particles) * radius * 0.95
+
+            # Add floating animation
+            float_speed = 0.3 + (seed % 100) / 200.0  # Varying speeds
+            float_amp = 20 + (seed % 50)  # Varying amplitudes
+
+            # Orbital drift
+            theta = theta_base + math.sin(flow_time * float_speed + seed) * 0.3
+            r = r_base + math.sin(flow_time * float_speed * 0.7 + seed * 0.1) * float_amp
+
+            # Convert to cartesian
+            px = int(x + math.cos(theta) * r)
+            py = int(y + math.sin(theta) * r)
+
+            # Particle size varies (bigger)
+            particle_size = 12 + (seed % 10)
+
+            # Alpha varies by distance from center and time (brighter)
+            dist_factor = 1.0 - (r / radius) * 0.2
+            pulse = 0.7 + math.sin(flow_time * 2 + seed * 0.5) * 0.3
+            alpha = 0.8 * dist_factor * pulse
+
+            # Draw particle with glow (larger glow radius)
+            draw_circle_additive(canvas, px, py, particle_size * 2.5, color, alpha * 0.5)
+            draw_circle_additive(canvas, px, py, particle_size * 1.5, color, alpha * 0.7)
+            draw_circle_additive(canvas, px, py, particle_size, color, alpha)
 
     # 2. Agent trails (with watery flow!)
-    import math
     for agent_idx, agent in enumerate(render_data.get('agents', [])):
         for point_idx, point in enumerate(agent.get('trail', [])):
             # Add wavy displacement to create flowing water effect
@@ -127,13 +163,13 @@ def onCook(scriptOp):
             draw_circle_additive(canvas, x, y, size * 2, color, alpha * 0.5)
             draw_circle_additive(canvas, x, y, size, color, alpha * 0.7)
 
-    # 4. Visitor auras (color-changing!) - 10x size for testing
+    # 4. Visitor auras (color from touching trees)
     for aura in render_data.get('visitor_auras', []):
         if aura is not None:
             x, y = int(aura['x']), int(aura['y'])
             color = aura['color']
             intensity = aura['intensity']
-            radius = int(aura['glow_radius'] * aura['pulse'] * 10)  # 10x for testing
+            radius = int(aura['glow_radius'] * aura['pulse'] * 4)  # Sized to match white aura
 
             # Large glow
             draw_circle_additive(canvas, x, y, radius * 3, color, intensity * 0.3)
@@ -161,11 +197,18 @@ def onCook(scriptOp):
         # Agent body
         draw_circle(canvas, x, y, agent['size'], agent['base_color'], 0.9)
 
-    # 6. Visitor indicators
+    # 6. Visitor indicators - white aura (similar to tree aura but lighter)
     for visitor in render_data.get('visitors', []):
         x, y = int(visitor['x']), int(visitor['y'])
-        # Yellow ring (10x size for testing)
-        draw_circle_ring(canvas, x, y, 140, 120, (255, 230, 100), 0.8)
+        # White aura with soft glow layers
+        white_color = (255, 255, 255)
+        radius = 60  # Base radius for visitor aura
+        # Outer soft glow
+        draw_circle_additive(canvas, x, y, radius * 2.5, white_color, 0.15)
+        # Middle glow
+        draw_circle_additive(canvas, x, y, radius * 1.5, white_color, 0.25)
+        # Inner core
+        draw_circle_additive(canvas, x, y, radius, white_color, 0.35)
 
     # 7. Pollination dances
     for dance in render_data.get('dances', []):

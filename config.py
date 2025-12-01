@@ -5,13 +5,12 @@ Colors, structure positions, and system settings
 
 import numpy as np
 
-# Structure colors
+# Structure colors (tree colors)
+# Yellow: #F9D28A, Green: #9CBB66, Purple: #624793
 STRUCTURE_COLORS = {
-    'structure1': np.array([255, 230, 100], dtype=np.uint8),
-    'structure2': np.array([255, 140, 180], dtype=np.uint8),
-    'structure3': np.array([180, 120, 255], dtype=np.uint8),
-    'structure4': np.array([100, 255, 180], dtype=np.uint8),
-    'structure5': np.array([255, 180, 100], dtype=np.uint8),
+    'yellow': np.array([249, 210, 138], dtype=np.uint8),   # #F9D28A
+    'green': np.array([156, 187, 102], dtype=np.uint8),    # #9CBB66
+    'purple': np.array([98, 71, 147], dtype=np.uint8),     # #624793
 }
 
 # Pollinator colors
@@ -26,10 +25,11 @@ PERSON_INDICATOR_COLOR = np.array([255, 230, 100], dtype=np.uint8)
 
 # Structure positions (normalized 0-1) - 3 trees at corners, partially off-screen
 # Canvas is 2160x1920 (X x Y), positions at corners so auras extend into view
+# Radius increased to 650 (was 300) for larger interaction area (single circle design)
 STRUCTURES = [
-    {'id': 0, 'x': 0.0, 'y': 1.0, 'radius': 300, 'color': STRUCTURE_COLORS['structure1']},   # Yellow: bottom-left
-    {'id': 1, 'x': 1.0, 'y': 0.0, 'radius': 300, 'color': STRUCTURE_COLORS['structure2']},   # Pink: top-right
-    {'id': 2, 'x': 0.0, 'y': 0.0, 'radius': 300, 'color': STRUCTURE_COLORS['structure3']},   # Purple: top-left
+    {'id': 0, 'x': 0.0, 'y': 1.0, 'radius': 650, 'color': STRUCTURE_COLORS['yellow']},   # Yellow: bottom-left
+    {'id': 1, 'x': 1.0, 'y': 1.0, 'radius': 650, 'color': STRUCTURE_COLORS['green']},    # Green: bottom-right
+    {'id': 2, 'x': 1.0, 'y': 0.0, 'radius': 650, 'color': STRUCTURE_COLORS['purple']},   # Purple: top-right
 ]
 
 # Resolution Settings
