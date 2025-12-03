@@ -12,36 +12,41 @@ class GetTdInfo200ResponseData(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, server=None, version=None, os_name=None, os_version=None):  # noqa: E501
+    def __init__(self, mcp_api_version=None, os_name=None, os_version=None, server=None, version=None):  # noqa: E501
         """GetTdInfo200ResponseData - a model defined in OpenAPI
 
-        :param server: The server of this GetTdInfo200ResponseData.  # noqa: E501
-        :type server: str
-        :param version: The version of this GetTdInfo200ResponseData.  # noqa: E501
-        :type version: str
+        :param mcp_api_version: The mcp_api_version of this GetTdInfo200ResponseData.  # noqa: E501
+        :type mcp_api_version: str
         :param os_name: The os_name of this GetTdInfo200ResponseData.  # noqa: E501
         :type os_name: str
         :param os_version: The os_version of this GetTdInfo200ResponseData.  # noqa: E501
         :type os_version: str
+        :param server: The server of this GetTdInfo200ResponseData.  # noqa: E501
+        :type server: str
+        :param version: The version of this GetTdInfo200ResponseData.  # noqa: E501
+        :type version: str
         """
         self.openapi_types = {
-            'server': str,
-            'version': str,
+            'mcp_api_version': str,
             'os_name': str,
-            'os_version': str
+            'os_version': str,
+            'server': str,
+            'version': str
         }
 
         self.attribute_map = {
-            'server': 'server',
-            'version': 'version',
+            'mcp_api_version': 'mcpApiVersion',
             'os_name': 'osName',
-            'os_version': 'osVersion'
+            'os_version': 'osVersion',
+            'server': 'server',
+            'version': 'version'
         }
 
-        self._server = server
-        self._version = version
+        self._mcp_api_version = mcp_api_version
         self._os_name = os_name
         self._os_version = os_version
+        self._server = server
+        self._version = version
 
     @classmethod
     def from_dict(cls, dikt) -> 'GetTdInfo200ResponseData':
@@ -55,54 +60,29 @@ class GetTdInfo200ResponseData(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def server(self) -> str:
-        """Gets the server of this GetTdInfo200ResponseData.
+    def mcp_api_version(self) -> str:
+        """Gets the mcp_api_version of this GetTdInfo200ResponseData.
 
-        Server name (typically \"TouchDesigner\")  # noqa: E501
+        Version of the TouchDesigner MCP API server  # noqa: E501
 
-        :return: The server of this GetTdInfo200ResponseData.
+        :return: The mcp_api_version of this GetTdInfo200ResponseData.
         :rtype: str
         """
-        return self._server
+        return self._mcp_api_version
 
-    @server.setter
-    def server(self, server: str):
-        """Sets the server of this GetTdInfo200ResponseData.
+    @mcp_api_version.setter
+    def mcp_api_version(self, mcp_api_version: str):
+        """Sets the mcp_api_version of this GetTdInfo200ResponseData.
 
-        Server name (typically \"TouchDesigner\")  # noqa: E501
+        Version of the TouchDesigner MCP API server  # noqa: E501
 
-        :param server: The server of this GetTdInfo200ResponseData.
-        :type server: str
+        :param mcp_api_version: The mcp_api_version of this GetTdInfo200ResponseData.
+        :type mcp_api_version: str
         """
-        if server is None:
-            raise ValueError("Invalid value for `server`, must not be `None`")  # noqa: E501
+        if mcp_api_version is None:
+            raise ValueError("Invalid value for `mcp_api_version`, must not be `None`")  # noqa: E501
 
-        self._server = server
-
-    @property
-    def version(self) -> str:
-        """Gets the version of this GetTdInfo200ResponseData.
-
-        TouchDesigner version number  # noqa: E501
-
-        :return: The version of this GetTdInfo200ResponseData.
-        :rtype: str
-        """
-        return self._version
-
-    @version.setter
-    def version(self, version: str):
-        """Sets the version of this GetTdInfo200ResponseData.
-
-        TouchDesigner version number  # noqa: E501
-
-        :param version: The version of this GetTdInfo200ResponseData.
-        :type version: str
-        """
-        if version is None:
-            raise ValueError("Invalid value for `version`, must not be `None`")  # noqa: E501
-
-        self._version = version
+        self._mcp_api_version = mcp_api_version
 
     @property
     def os_name(self) -> str:
@@ -153,3 +133,53 @@ class GetTdInfo200ResponseData(Model):
             raise ValueError("Invalid value for `os_version`, must not be `None`")  # noqa: E501
 
         self._os_version = os_version
+
+    @property
+    def server(self) -> str:
+        """Gets the server of this GetTdInfo200ResponseData.
+
+        Server name (typically \"TouchDesigner\")  # noqa: E501
+
+        :return: The server of this GetTdInfo200ResponseData.
+        :rtype: str
+        """
+        return self._server
+
+    @server.setter
+    def server(self, server: str):
+        """Sets the server of this GetTdInfo200ResponseData.
+
+        Server name (typically \"TouchDesigner\")  # noqa: E501
+
+        :param server: The server of this GetTdInfo200ResponseData.
+        :type server: str
+        """
+        if server is None:
+            raise ValueError("Invalid value for `server`, must not be `None`")  # noqa: E501
+
+        self._server = server
+
+    @property
+    def version(self) -> str:
+        """Gets the version of this GetTdInfo200ResponseData.
+
+        TouchDesigner version number  # noqa: E501
+
+        :return: The version of this GetTdInfo200ResponseData.
+        :rtype: str
+        """
+        return self._version
+
+    @version.setter
+    def version(self, version: str):
+        """Sets the version of this GetTdInfo200ResponseData.
+
+        TouchDesigner version number  # noqa: E501
+
+        :param version: The version of this GetTdInfo200ResponseData.
+        :type version: str
+        """
+        if version is None:
+            raise ValueError("Invalid value for `version`, must not be `None`")  # noqa: E501
+
+        self._version = version

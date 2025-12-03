@@ -10,7 +10,9 @@ from openapi_server.models.exec_node_method200_response import ExecNodeMethod200
 from openapi_server.models.exec_node_method_request import ExecNodeMethodRequest  # noqa: E501
 from openapi_server.models.exec_python_script200_response import ExecPythonScript200Response  # noqa: E501
 from openapi_server.models.exec_python_script_request import ExecPythonScriptRequest  # noqa: E501
+from openapi_server.models.get_module_help200_response import GetModuleHelp200Response  # noqa: E501
 from openapi_server.models.get_node_detail200_response import GetNodeDetail200Response  # noqa: E501
+from openapi_server.models.get_node_errors200_response import GetNodeErrors200Response  # noqa: E501
 from openapi_server.models.get_nodes200_response import GetNodes200Response  # noqa: E501
 from openapi_server.models.get_td_info200_response import GetTdInfo200Response  # noqa: E501
 from openapi_server.models.get_td_python_class_details200_response import GetTdPythonClassDetails200Response  # noqa: E501
@@ -81,6 +83,19 @@ def exec_python_script(body):  # noqa: E501
     return 'do some magic!'
 
 
+def get_module_help(module_name):  # noqa: E501
+    """Get module/class Python help documentation
+
+    Retrieve Python help() documentation for TouchDesigner modules, classes, or utilities like tdu. # noqa: E501
+
+    :param module_name: Module or class name (e.g., \&quot;noiseCHOP\&quot;, \&quot;td.noiseCHOP\&quot;, \&quot;tdu\&quot;).
+    :type module_name: str
+
+    :rtype: Union[GetModuleHelp200Response, Tuple[GetModuleHelp200Response, int], Tuple[GetModuleHelp200Response, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
 def get_node_detail(node_path):  # noqa: E501
     """Get node detail
 
@@ -90,6 +105,19 @@ def get_node_detail(node_path):  # noqa: E501
     :type node_path: str
 
     :rtype: Union[GetNodeDetail200Response, Tuple[GetNodeDetail200Response, int], Tuple[GetNodeDetail200Response, int, Dict[str, str]]
+    """
+    return 'do some magic!'
+
+
+def get_node_errors(node_path):  # noqa: E501
+    """Get node errors
+
+    Collects TouchDesigner error messages for a node and its children # noqa: E501
+
+    :param node_path: Absolute path to the node to inspect. e.g., \&quot;/project1/text1\&quot;
+    :type node_path: str
+
+    :rtype: Union[GetNodeErrors200Response, Tuple[GetNodeErrors200Response, int], Tuple[GetNodeErrors200Response, int, Dict[str, str]]
     """
     return 'do some magic!'
 

@@ -9,7 +9,9 @@ from openapi_server.models.exec_node_method200_response import ExecNodeMethod200
 from openapi_server.models.exec_node_method_request import ExecNodeMethodRequest  # noqa: E501
 from openapi_server.models.exec_python_script200_response import ExecPythonScript200Response  # noqa: E501
 from openapi_server.models.exec_python_script_request import ExecPythonScriptRequest  # noqa: E501
+from openapi_server.models.get_module_help200_response import GetModuleHelp200Response  # noqa: E501
 from openapi_server.models.get_node_detail200_response import GetNodeDetail200Response  # noqa: E501
+from openapi_server.models.get_node_errors200_response import GetNodeErrors200Response  # noqa: E501
 from openapi_server.models.get_nodes200_response import GetNodes200Response  # noqa: E501
 from openapi_server.models.get_td_info200_response import GetTdInfo200Response  # noqa: E501
 from openapi_server.models.get_td_python_class_details200_response import GetTdPythonClassDetails200Response  # noqa: E501
@@ -96,6 +98,23 @@ class TestDefaultController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_get_module_help(self):
+        """Test case for get_module_help
+
+        Get module/class Python help documentation
+        """
+        query_string = [('moduleName', 'module_name_example')]
+        headers = { 
+            'Accept': 'application/json',
+        }
+        response = self.client.open(
+            '/api/td/modules/help',
+            method='GET',
+            headers=headers,
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_get_node_detail(self):
         """Test case for get_node_detail
 
@@ -107,6 +126,23 @@ class TestDefaultController(BaseTestCase):
         }
         response = self.client.open(
             '/api/nodes/detail',
+            method='GET',
+            headers=headers,
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
+    def test_get_node_errors(self):
+        """Test case for get_node_errors
+
+        Get node errors
+        """
+        query_string = [('nodePath', 'node_path_example')]
+        headers = { 
+            'Accept': 'application/json',
+        }
+        response = self.client.open(
+            '/api/nodes/errors',
             method='GET',
             headers=headers,
             query_string=query_string)

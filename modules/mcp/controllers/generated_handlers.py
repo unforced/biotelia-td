@@ -185,6 +185,39 @@ def update_node(body: str = None, **kwargs) -> Result:
 
     except Exception as e:
         return error_result(f"Handler for 'update_node' failed: {str(e)}")
+def get_node_errors(body: str = None, **kwargs) -> Result:
+    """
+    Auto-generated handler for operation: get_node_errors
+    """
+    try:
+        print(f"[DEBUG] Handler 'get_node_errors' called with body: {body}, kwargs: {kwargs}")
+        service_method = getattr(get_api_service(), "get_node_errors", None)
+        if not callable(service_method):
+            return error_result("Service method 'get_node_errors' not implemented")
+
+        # Merge body
+        if body:
+            try:
+                parsed_body = json.loads(body)
+                kwargs.update(parsed_body)
+            except Exception as e:
+                return error_result(f"Invalid JSON body: {str(e)}")
+
+        # CamelCase → SnakeCase 変換
+        kwargs_snake_case = {camel_to_snake(k): v for k, v in kwargs.items()}
+
+        sig = inspect.signature(service_method)
+
+        # Prepare args matching the function signature
+        call_args = {}
+        for param_name in sig.parameters:
+            if param_name in kwargs_snake_case:
+                call_args[param_name] = kwargs_snake_case[param_name]
+
+        return service_method(**call_args)
+
+    except Exception as e:
+        return error_result(f"Handler for 'get_node_errors' failed: {str(e)}")
 def get_td_python_classes(body: str = None, **kwargs) -> Result:
     """
     Auto-generated handler for operation: get_td_python_classes
@@ -251,6 +284,39 @@ def get_td_python_class_details(body: str = None, **kwargs) -> Result:
 
     except Exception as e:
         return error_result(f"Handler for 'get_td_python_class_details' failed: {str(e)}")
+def get_module_help(body: str = None, **kwargs) -> Result:
+    """
+    Auto-generated handler for operation: get_module_help
+    """
+    try:
+        print(f"[DEBUG] Handler 'get_module_help' called with body: {body}, kwargs: {kwargs}")
+        service_method = getattr(get_api_service(), "get_module_help", None)
+        if not callable(service_method):
+            return error_result("Service method 'get_module_help' not implemented")
+
+        # Merge body
+        if body:
+            try:
+                parsed_body = json.loads(body)
+                kwargs.update(parsed_body)
+            except Exception as e:
+                return error_result(f"Invalid JSON body: {str(e)}")
+
+        # CamelCase → SnakeCase 変換
+        kwargs_snake_case = {camel_to_snake(k): v for k, v in kwargs.items()}
+
+        sig = inspect.signature(service_method)
+
+        # Prepare args matching the function signature
+        call_args = {}
+        for param_name in sig.parameters:
+            if param_name in kwargs_snake_case:
+                call_args[param_name] = kwargs_snake_case[param_name]
+
+        return service_method(**call_args)
+
+    except Exception as e:
+        return error_result(f"Handler for 'get_module_help' failed: {str(e)}")
 def exec_node_method(body: str = None, **kwargs) -> Result:
     """
     Auto-generated handler for operation: exec_node_method
@@ -357,8 +423,10 @@ __all__ = [
   "create_node",
   "get_node_detail",
   "update_node",
+  "get_node_errors",
   "get_td_python_classes",
   "get_td_python_class_details",
+  "get_module_help",
   "exec_node_method",
   "exec_python_script",
   "get_td_info",
